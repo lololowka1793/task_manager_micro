@@ -1,0 +1,77 @@
+version: "3.9"
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: auth
+    ports:
+      - "8001:8001"
+
+  users:
+    build:
+      context: .
+      dockerfile: services/users/Dockerfile
+    container_name: users
+    ports:
+      - "8002:8002"
+    # тут внутри контейнера лежит SQLite users.db
+
+  projects:
+    build:
+      context: .
+      dockerfile: services/projects/Dockerfile
+    container_name: projects
+    ports:
+      - "8003:8003"
+
+  tasks:
+    build:
+      context: .
+      dockerfile: services/tasks/Dockerfile
+    container_name: tasks
+    ports:
+      - "8004:8004"
+    environment:
+      - NOTIFICATIONS_SERVICE_URL=http://notifications:8006
+
+  comments:
+    build:
+      context: .
+      dockerfile: services/comments/Dockerfile
+    container_name: comments
+    ports:
+      - "8005:8005"
+    environment:
+      - NOTIFICATIONS_SERVICE_URL=http://notifications:8006
+
+  notifications:
+    build:
+      context: .
+      dockerfile: services/notifications/Dockerfile
+    container_name: notifications
+    ports:
+      - "8006:8006"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    container_name: gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - AUTH_SERVICE_URL=http://auth:8001
+      - USERS_SERVICE_URL=http://users:8002
+      - PROJECTS_SERVICE_URL=http://projects:8003
+      - TASKS_SERVICE_URL=http://tasks:8004
+      - COMMENTS_SERVICE_URL=http://comments:8005
+      - NOTIFICATIONS_SERVICE_URL=http://notifications:8006
+    depends_on:
+      - auth
+      - users
+      - projects
+      - tasks
+      - comments
+      - notifications
