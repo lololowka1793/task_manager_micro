@@ -1,4 +1,4 @@
-name: CI
+name: CI-CD
 
 on:
   push:
@@ -25,3 +25,37 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  docker-build:
+    # Запускаем сборку образов только если тесты прошли
+    needs: tests
+    # И только для main/master, чтобы не гонять сборку на каждый PR
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker images for services
+        run: |
+          echo "Building auth image..."
+          docker build -f services/auth/Dockerfile          -t task_auth .
+
+          echo "Building users image..."
+          docker build -f services/users/Dockerfile         -t task_users .
+
+          echo "Building projects image..."
+          docker build -f services/projects/Dockerfile      -t task_projects .
+
+          echo "Building tasks image..."
+          docker build -f services/tasks/Dockerfile         -t task_tasks .
+
+          echo "Building comments image..."
+          docker build -f services/comments/Dockerfile      -t task_comments .
+
+          echo "Building notifications image..."
+          docker build -f services/notifications/Dockerfile -t task_notifications .
+
+          echo "Building gateway image..."
+          docker build -f services/gateway/Dockerfile       -t task_gateway .
